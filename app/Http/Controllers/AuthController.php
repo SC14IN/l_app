@@ -2,19 +2,21 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use  App\Models\User;
+use  App\User;
+
+use App\Mail\TestEmail;
+use Illuminate\Support\Facades\Auth;
+
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
-    /**
-     * Store a new user.
-     *
-     * @param  Request  $request
-     * @return Response
-     */
-    public function register(Request $request)
-    {
+    
+    public function register(Request $request){
         //validate incoming request 
+        // $data = ['message' => 'This is a test!'];
+        // Mail::to('ch.sathvik@vmock.com')->send(new TestEmail($data));
+
         $this->validate($request, [
             'name' => 'required|string',
             'email' => 'required|email|unique:users',
@@ -30,7 +32,6 @@ class AuthController extends Controller
             $user->password = app('hash')->make($plainPassword);
 
             $user->save();
-
             //return successful response
             return response()->json(['user' => $user, 'message' => 'CREATED'], 201);
 
@@ -40,6 +41,24 @@ class AuthController extends Controller
         }
 
     }
+    public function login(Request $request){
+        //validate incoming request 
+        $this->validate($request, [
+            'email' => 'required|string',
+            'password' => 'required|string',
+        ]);
 
+        $credentials = $request->only(['email', 'password']);
+
+        if (! $token = Auth::attempt($credentials)) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        return $this->respondWithToken($token);
+    }
+    // public function logout(){
+    //     Auth::logout();
+    //     return response()->json(['message' => 'User Logged out!'], 201);
+    // }
 
 }
