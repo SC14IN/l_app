@@ -20,6 +20,13 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     // Matches "/api/register
     $router->post('register', 'AuthController@register');
     $router->post('login', 'AuthController@login');
-    $router->post('sendmail', 'MailController@sendEmail');
- });
- 
+    // $router->post('logout', 'AuthController@logout');
+    $router->post('emailVerify', 'AuthController@emailVerify');
+    // $router->post('sendEmail', 'MailController@sendEmail');
+    $router->post('forgotPassword', 'AuthController@forgotPassword');
+    $router->post('resetPassword', 'AuthController@resetPassword');
+    $router->get('listUsers', 'UserController@listUsers');
+});
+$router->group(['prefix' => 'api','middleware'=>'auth'], function () use ($router) {
+    $router->get('listUsers', 'UserController@listUsers');
+});
