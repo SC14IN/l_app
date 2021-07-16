@@ -41,10 +41,25 @@ class UserController extends Controller
         $user->save();
         return response()->json(['message'=>'Successfully deleted yourself']);
     }
+    public function delUser(Request $request){
+        $admin = auth()->user();
+        if ($admin->role == 'admin'){
+            $this->validate($request, [
+                'email' => 'required|email',
+            ]);
+            $user = User::where('email',$request->input('email'))->first();
+            $user->deleted = true;
+            $user->deletedBy = 'admin';
+            $user->save();
+            return response()->json(['message'=>'Successfully deleted user']);
 
+            // return response()->json(['message'=>$request->input('email')]);
+        }
+        return response()->json(['message'=>'Not authorised']);
+    }
     public function createUser(Request $request){
         $admin = auth()->user();
-        if($admin->'role' == 'admin'){
+        if ($admin->role == 'admin'){
 
             $this->validate($request, [
                 'name' => 'required|string',
@@ -64,14 +79,91 @@ class UserController extends Controller
                 $user->createdBy = 'admin';
                 
                 $user->save();
-                ]);
-                return response()->json(['user' => $user, 'message' => 'Registered Successfully'], 201);
+                return response()->json(['email' => $user->email,'password'=>$plainPassword, 'message' => 'Registered Successfully'], 201);
     
             } catch (\Exception $e) {
                 return response()->json(['message' => 'User Registration Failed!'], 409);
             }
         }
         return response()->json(['message'=>'Not authorised']);
+    }
+/////what to do if we want to re create a deleted account
+//can i delete the prevoius account from db?
+
+// $products = Product::where('name_en', 'LIKE', '%'.$search.'%')->get();
+// $q->where('created_at', '>=', date('Y-m-d').' 00:00:00'));
+// $q->whereDate('created_at', '=', date('Y-m-d'));
+    
+    public function filter(Request $request){
+        $admin = auth()->user();
+        $column = $request->input('column');
+        $string = $request->input('string');
+
+        //take the input for what column i want to filter by
+        //string to filter
+        if ($admin->role == 'admin'){
+            if ($column == 'name' || $column == 'email'){
+                $users = User::select('name','email','role')
+                    ->where($column, 'LIKE', '%'.$string.'%')
+                    ->where('verified', true)
+                    ->where('deleted', false)
+                    ->get();
+                return $users;
+            }
+            if($column == 'role'){
+                $users = User::select('name','email')
+                    ->where('role', $string)
+                    ->where('verified', true)
+                    ->where('deleted', false)
+                    ->get();
+                return $users;
+            }
+            if($column == 'deleted'){
+                $users = User::select('name','email')
+                    ->where('verified', true)
+                    ->where('deleted', true)
+                    ->get();
+                return $users;
+            }
+            if($column == 'verified'){
+                $users = User::select('name','email','role','deleted')
+                    ->where('verified', true)
+                    ->get();
+                return $users;
+            }
+            if($column == 'date'){
+                $users = User::select('name','email','role')
+                    ->whereDate('created_at', '=', $string)
+                    ->where('verified', true)
+                    ->where('deleted', false)
+                    ->get();
+                return $users;
+            }
+            if($column == 'createdBy'){
+                $users = User::select('name','email','role')
+                    ->where('createdBy', $string)
+                    ->where('verified', true)
+                    ->where('deleted', false)
+                    ->get();
+                return $users;
+            }
+            if($column == 'deletedBy'){
+                $users = User::select('name','email','role')
+                    ->where('deletedBy', $string)
+                    ->where('verified', true)
+                    ->where('deleted', true)
+                    ->get();
+                return $users;
+            }
+            if($column == 'id'){
+                $users = User::select('name','email','role')
+                    ->where('id', $string)
+                    ->get();
+                return $users;
+            }
+            
+        }
+        return response()->json(['message'=>'Not allowed']);
     }
 
 }

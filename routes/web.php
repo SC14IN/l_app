@@ -25,8 +25,13 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     // $router->post('sendEmail', 'MailController@sendEmail');
     $router->post('forgotPassword', 'AuthController@forgotPassword');
     $router->post('resetPassword', 'AuthController@resetPassword');
-    $router->get('listUsers', 'UserController@listUsers');
+    // $router->get('listUsers', 'UserController@listUsers');
 });
 $router->group(['prefix' => 'api','middleware'=>'auth'], function () use ($router) {
     $router->get('listUsers', 'UserController@listUsers');
+    $router->get('delSelf', 'UserController@delSelf');
+    $router->post('delUser', 'UserController@delUser');
+    $router->post('createUser', 'UserController@createUser');
+
+    $router->post('filter', 'UserController@filter');
 });

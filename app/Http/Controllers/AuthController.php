@@ -33,7 +33,9 @@ class AuthController extends Controller
             $user->password = app('hash')->make($plainPassword);
             $user->verified = false;
             $user->deleted = false;
-            $user->role = 'user';
+            $user->role = 'normal';
+            $user->createdBy = 'self';
+            
             $user->save();
             
             $verify = new VerifyUser;
@@ -78,6 +80,7 @@ class AuthController extends Controller
         $credentials = $request->only(['email', 'password']);
         $user = User::where('email',$credentials['email'])->first();
         if(!$user->verified){return response()->json(['message' => 'Please verify your email'], 401);}
+        if($user->deleted){return response()->json(['message' => 'account deleted by '.($user->deletedBy)], 401);}
         if (! $token = Auth::attempt($credentials)) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
